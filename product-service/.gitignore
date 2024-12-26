@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Mac OS ###
+.DS_Store
+/mysql/
+/volume-data/
+/data/
+/docker/tempo/tempo-data/
+/docker/tempo/tempo-data/
