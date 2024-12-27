@@ -1,5 +1,6 @@
 package com.tech.microservice.order.service;
 
+import com.tech.microservice.order.client.InventoryClient;
 import com.tech.microservice.order.dto.OrderRequest;
 import com.tech.microservice.order.model.Order;
 import com.tech.microservice.order.repository.OrderRepository;
@@ -18,13 +19,15 @@ public class OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private InventoryClient inventoryClient;
 
 //    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
 
     public void placeOrder(OrderRequest orderRequest) {
 
-//        var isProductInStock = inventoryClient.isInStock(orderRequest.skuCode(), orderRequest.quantity());
-//        if (isProductInStock) {
+        var isProductInStock = inventoryClient.isInStock(orderRequest.skuCode(), orderRequest.quantity());
+        if (isProductInStock) {
             Order order = new Order();
             order.setOrderNumber(UUID.randomUUID().toString());
             order.setPrice(orderRequest.price().multiply(BigDecimal.valueOf(orderRequest.quantity())));
@@ -41,8 +44,8 @@ public class OrderService {
 //            log.info("Start - Sending OrderPlacedEvent {} to Kafka topic order-placed", orderPlacedEvent);
 //            kafkaTemplate.send("order-placed", orderPlacedEvent);
 //            log.info("End - Sending OrderPlacedEvent {} to Kafka topic order-placed", orderPlacedEvent);
-//        } else {
-//            throw new RuntimeException("Product with SkuCode " + orderRequest.skuCode() + " is not in stock");
-//        }
+        } else {
+            throw new RuntimeException("Product with SkuCode " + orderRequest.skuCode() + " is not in stock");
+        }
     }
 }
