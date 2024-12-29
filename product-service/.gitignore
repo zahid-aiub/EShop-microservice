@@ -32,9 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-### Mac OS ###
+### Docker ###
 .DS_Store
 mysql/
 data/
-/volume-data/
-/docker/tempo/tempo-data/
