@@ -34,6 +34,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
-/mysql/
-/data/
+mysql/
+data/
 /volume-data/
