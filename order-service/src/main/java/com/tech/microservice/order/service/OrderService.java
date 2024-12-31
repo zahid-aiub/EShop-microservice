@@ -2,10 +2,14 @@ package com.tech.microservice.order.service;
 
 import com.tech.microservice.order.client.InventoryClient;
 import com.tech.microservice.order.dto.OrderRequest;
+import com.tech.microservice.order.event.OrderPlacedEvent;
 import com.tech.microservice.order.model.Order;
 import com.tech.microservice.order.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,16 +17,18 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
-@Slf4j
+//@Slf4j
 @Transactional
 public class OrderService {
+
+    Logger log = LoggerFactory.getLogger(OrderService.class);
 
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private InventoryClient inventoryClient;
-
-//    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
+    @Autowired
+    private KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
 
     public void placeOrder(OrderRequest orderRequest) {
 
@@ -35,15 +41,11 @@ public class OrderService {
             order.setQuantity(orderRequest.quantity());
             orderRepository.save(order);
 
-            // Send the message to Kafka Topic
-//            OrderPlacedEvent orderPlacedEvent = new OrderPlacedEvent();
-//            orderPlacedEvent.setOrderNumber(order.getOrderNumber());
-//            orderPlacedEvent.setEmail(orderRequest.userDetails().email());
-//            orderPlacedEvent.setFirstName(orderRequest.userDetails().firstName());
-//            orderPlacedEvent.setLastName(orderRequest.userDetails().lastName());
-//            log.info("Start - Sending OrderPlacedEvent {} to Kafka topic order-placed", orderPlacedEvent);
-//            kafkaTemplate.send("order-placed", orderPlacedEvent);
-//            log.info("End - Sending OrderPlacedEvent {} to Kafka topic order-placed", orderPlacedEvent);
+//             Send the message to Kafka Topic
+            OrderPlacedEvent orderPlacedEvent = new OrderPlacedEvent(order.getOrderNumber(), orderRequest.skuCode());
+            log.info("Start - Sending OrderPlacedEvent {} to Kafka topic order-placed", orderPlacedEvent);
+            kafkaTemplate.send("order-placed", orderPlacedEvent);
+            log.info("End - Sending OrderPlacedEvent {} to Kafka topic order-placed", orderPlacedEvent);
         } else {
             throw new RuntimeException("Product with SkuCode " + orderRequest.skuCode() + " is not in stock");
         }
