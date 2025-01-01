@@ -11,6 +11,7 @@ public class Product {
     private String id;
     private String name;
     private String description;
+    private String skuCode;
     private BigDecimal price;
 
     public static ProductBuilder builder() {
@@ -29,6 +30,10 @@ public class Product {
         return description;
     }
 
+    public String getSkuCode() {
+        return skuCode;
+    }
+
     public BigDecimal getPrice() {
         return price;
     }
@@ -37,6 +42,7 @@ public class Product {
         private String id;
         private String name;
         private String description;
+        private String skuCode;
         private BigDecimal price;
 
         public ProductBuilder id(String id) {
@@ -54,6 +60,11 @@ public class Product {
             return this;
         }
 
+        public ProductBuilder skuCode(String skuCode) {
+            this.skuCode = skuCode;
+            return this;
+        }
+
         public ProductBuilder price(BigDecimal price) {
             this.price = price;
             return this;
@@ -64,6 +75,7 @@ public class Product {
             product.id = this.id;
             product.name = this.name;
             product.description = this.description;
+            product.skuCode = this.skuCode;
             product.price = this.price;
             return product;
         }
