@@ -34,4 +34,4 @@ build/
 
 ### Docker ###
 volume-data/
-docker/tempo/tempo-data/
+../docker/tempo/tempo-data/
