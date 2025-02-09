@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/EShop-microservice.iml" filepath="$PROJECT_DIR$/EShop-microservice.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../EShop-microservice/api-gateway/api-gateway.iml" filepath="$PROJECT_DIR$/../../EShop-microservice/api-gateway/api-gateway.iml" />
     </modules>
   </component>
 </project>
