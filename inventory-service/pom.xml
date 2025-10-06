@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<dockerPassword>Uqi#12345</dockerPassword>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -138,6 +139,17 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<image>
+						<name>zahidaiub/ms-${project.artifactId}</name>
+						<builder>dashaun/builder:tiny</builder>
+						<publish>true</publish>
+					</image>
+					<docker>
+						<publishRegistry>
+							<username>zahidaiub</username>
+							<password>${dockerPassword}</password>
+						</publishRegistry>
+					</docker>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>

@@ -36,7 +36,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<dockerPassword></dockerPassword>
+		<dockerPassword>Uqi#12345</dockerPassword>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -49,6 +49,16 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-gateway-server-mvc</artifactId>
+			<version>4.2.0</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -59,7 +69,7 @@
 				<configuration>
 					<image>
 						<name>zahidaiub/ms-${project.artifactId}</name>
-						<builder>zahidaiub/builder:tiny</builder>
+						<builder>dashaun/builder:tiny</builder>
 						<publish>true</publish>
 					</image>
 					<docker>
