@@ -56,6 +56,8 @@ public class OrderService {
     }
 
     public List<Order> getOrderList() {
+        var isProductInStock = inventoryClient.isInStock("iphone_15", 10);
+        System.out.println(isProductInStock);
         return this.orderRepository.findAll();
     }
 }

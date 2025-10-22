@@ -1,6 +1,7 @@
 package com.tech.microservice.order.config;
 
 import com.tech.microservice.order.client.InventoryClient;
+import com.tech.microservice.order.config.interceptor.JwtForwardInterceptor;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,10 +26,11 @@ public class RestClientConfig {
     private ObservationRegistry observationRegistry;
 
     @Bean
-    public InventoryClient inventoryClient() {
+    public InventoryClient inventoryClient(JwtForwardInterceptor jwtInterceptor) {
         RestClient restClient = RestClient.builder()
                 .baseUrl(inventoryServiceUrl)
                 .requestFactory(getClientRequestFactory())
+                .requestInterceptor(jwtInterceptor)  // passing token in request header
                 .observationRegistry(observationRegistry)
                 .build();
         var restClientAdapter = RestClientAdapter.create(restClient);

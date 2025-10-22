@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String role = getRole(token);
 
                     UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(username, null, getAuthorities(role));
+                            new UsernamePasswordAuthenticationToken(username, token, getAuthorities(role));  // passing token because it needs to pass to the inventory service for RestClient API call
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(auth);
