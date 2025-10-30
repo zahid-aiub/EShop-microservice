@@ -5,10 +5,7 @@ import com.tech.microservice.gateway.auth.dto.LoginRequest;
 import com.tech.microservice.gateway.auth.dto.UserRegistrationRequest;
 import com.tech.microservice.gateway.auth.entity.User;
 import com.tech.microservice.gateway.auth.service.AuthService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -37,6 +34,11 @@ public class AuthController {
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody LoginRequest request) {
         return authService.login(request.username(), request.password());
+    }
+
+    @GetMapping("/profile")
+    public String profile() {
+        return "Profile info ....";
     }
 
 }
