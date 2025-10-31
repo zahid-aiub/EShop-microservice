@@ -1,6 +1,5 @@
 package com.tech.microservice.gateway.auth.controller;
 
-
 import com.tech.microservice.gateway.auth.dto.LoginRequest;
 import com.tech.microservice.gateway.auth.dto.UserRegistrationRequest;
 import com.tech.microservice.gateway.auth.entity.User;

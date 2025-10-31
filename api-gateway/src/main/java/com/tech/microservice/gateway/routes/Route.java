@@ -26,15 +26,13 @@ public class Route {
     @Value("${inventory.service.url}")
     private String inventoryServiceUrl;
 
+    // ===================== PRODUCT SERVICE =====================
     @Bean
     public RouterFunction<ServerResponse> productServiceRoute() {
         return GatewayRouterFunctions.route("product_service")
-                .route(RequestPredicates.all(), request -> {
-                    if (request.path().startsWith("/api/product")) {
-                        return HandlerFunctions.http(productServiceUrl).handle(request);
-                    }
-                    return ServerResponse.notFound().build();
-                })
+                .route(RequestPredicates.path("/api/product")
+                                .or(RequestPredicates.path("/api/product/**")),
+                        HandlerFunctions.http(productServiceUrl))
                 .filter(CircuitBreakerFilterFunctions.circuitBreaker(
                         "productServiceCircuitBreaker",
                         URI.create("forward:/fallbackRoute")))
@@ -53,15 +51,13 @@ public class Route {
                 .build();
     }
 
+    // ===================== ORDER SERVICE =====================
     @Bean
     public RouterFunction<ServerResponse> orderServiceRoute() {
         return GatewayRouterFunctions.route("order_service")
-                .route(RequestPredicates.all(), request -> {
-                    if (request.path().startsWith("/api/order")) {
-                        return HandlerFunctions.http(orderServiceUrl).handle(request);
-                    }
-                    return ServerResponse.notFound().build();
-                })
+                .route(RequestPredicates.path("/api/order")
+                                .or(RequestPredicates.path("/api/order/**")),
+                        HandlerFunctions.http(orderServiceUrl))
                 .filter(CircuitBreakerFilterFunctions.circuitBreaker(
                         "orderServiceCircuitBreaker",
                         URI.create("forward:/fallbackRoute")))
@@ -80,15 +76,13 @@ public class Route {
                 .build();
     }
 
+    // ===================== INVENTORY SERVICE =====================
     @Bean
     public RouterFunction<ServerResponse> inventoryServiceRoute() {
         return GatewayRouterFunctions.route("inventory_service")
-                .route(RequestPredicates.all(), request -> {
-                    if (request.path().startsWith("/api/inventory")) {
-                        return HandlerFunctions.http(inventoryServiceUrl).handle(request);
-                    }
-                    return ServerResponse.notFound().build();
-                })
+                .route(RequestPredicates.path("/api/inventory")
+                                .or(RequestPredicates.path("/api/inventory/**")),
+                        HandlerFunctions.http(inventoryServiceUrl))
                 .filter(CircuitBreakerFilterFunctions.circuitBreaker(
                         "inventoryServiceCircuitBreaker",
                         URI.create("forward:/fallbackRoute")))
@@ -107,6 +101,7 @@ public class Route {
                 .build();
     }
 
+    // ===================== FALLBACK =====================
     @Bean
     public RouterFunction<ServerResponse> fallbackRoute() {
         return route("fallbackRoute")
