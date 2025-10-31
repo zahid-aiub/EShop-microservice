@@ -3,14 +3,14 @@ package com.tech.microservice.product.service;
 import com.tech.microservice.product.dto.ProductRequest;
 import com.tech.microservice.product.dto.ProductResponse;
 import com.tech.microservice.product.event.ProductCreatedEvent;
+import com.tech.microservice.product.event.publisher.ElasticsearchDataSyncPublisher;
 import com.tech.microservice.product.model.Product;
 import com.tech.microservice.product.model.ProductES;
-import com.tech.microservice.product.repository.mongo.ProductRepository;
 import com.tech.microservice.product.repository.elastic.ProductSearchRepository;
+import com.tech.microservice.product.repository.mongo.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class ProductService {
     private ProductSearchRepository productSearchRepository;
 
     @Autowired
-    private KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
+    private ElasticsearchDataSyncPublisher publisher;
 
     public ProductResponse createProduct(ProductRequest productRequest) {
         Product product = Product.builder()
@@ -47,7 +47,7 @@ public class ProductService {
                 product.getPrice()
         );
         log.info("Start - Sending ProductCreatedEvent {} to Kafka topic elastic-sync", productCreatedEvent);
-        kafkaTemplate.send("elastic-sync", productCreatedEvent);
+        publisher.sendProductCreatedEvent(productCreatedEvent);
         log.info("End - Sending ProductCreatedEvent {} to Kafka topic elastic-sync", productCreatedEvent);
         return new ProductResponse(product.getId(), product.getName(), product.getDescription(),
                 product.getSkuCode(),
