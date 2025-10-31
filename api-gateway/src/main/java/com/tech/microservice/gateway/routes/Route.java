@@ -28,8 +28,9 @@ public class Route {
 
     @Bean
     public RouterFunction<ServerResponse> productServiceRoute() {
-        return GatewayRouterFunctions.route("product_service")
-                .route(RequestPredicates.path("/api/product"), HandlerFunctions.http(productServiceUrl))
+        return route("product_service")
+                .route(RequestPredicates.path("/api/product/**"),
+                        HandlerFunctions.http(productServiceUrl))
                 .filter(CircuitBreakerFilterFunctions.circuitBreaker("productServiceCircuitBreaker",
                         URI.create("forward:/fallbackRoute")))
                 .build();
