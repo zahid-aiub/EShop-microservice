@@ -1,5 +1,7 @@
 package com.tech.microservice.gateway.routes;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.server.mvc.filter.CircuitBreakerFilterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
@@ -7,17 +9,27 @@ import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.stream.Collectors;
 
 import static org.springframework.cloud.gateway.server.mvc.filter.FilterFunctions.setPath;
 import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
 
 @Configuration
 public class Route {
+
+    private static final Logger log = LoggerFactory.getLogger(Route.class);
 
     @Value("${product.service.url}")
     private String productServiceUrl;
@@ -26,17 +38,10 @@ public class Route {
     @Value("${inventory.service.url}")
     private String inventoryServiceUrl;
 
-    // ===================== PRODUCT SERVICE =====================
+
     @Bean
     public RouterFunction<ServerResponse> productServiceRoute() {
-        return GatewayRouterFunctions.route("product_service")
-                .route(RequestPredicates.path("/api/product")
-                                .or(RequestPredicates.path("/api/product/**")),
-                        HandlerFunctions.http(productServiceUrl))
-                .filter(CircuitBreakerFilterFunctions.circuitBreaker(
-                        "productServiceCircuitBreaker",
-                        URI.create("forward:/fallbackRoute")))
-                .build();
+        return createLoggedRoute("product_service", "/api/product", productServiceUrl);
     }
 
     @Bean
@@ -51,17 +56,10 @@ public class Route {
                 .build();
     }
 
-    // ===================== ORDER SERVICE =====================
+
     @Bean
     public RouterFunction<ServerResponse> orderServiceRoute() {
-        return GatewayRouterFunctions.route("order_service")
-                .route(RequestPredicates.path("/api/order")
-                                .or(RequestPredicates.path("/api/order/**")),
-                        HandlerFunctions.http(orderServiceUrl))
-                .filter(CircuitBreakerFilterFunctions.circuitBreaker(
-                        "orderServiceCircuitBreaker",
-                        URI.create("forward:/fallbackRoute")))
-                .build();
+        return createLoggedRoute("order_service", "/api/order", orderServiceUrl);
     }
 
     @Bean
@@ -76,17 +74,10 @@ public class Route {
                 .build();
     }
 
-    // ===================== INVENTORY SERVICE =====================
+
     @Bean
     public RouterFunction<ServerResponse> inventoryServiceRoute() {
-        return GatewayRouterFunctions.route("inventory_service")
-                .route(RequestPredicates.path("/api/inventory")
-                                .or(RequestPredicates.path("/api/inventory/**")),
-                        HandlerFunctions.http(inventoryServiceUrl))
-                .filter(CircuitBreakerFilterFunctions.circuitBreaker(
-                        "inventoryServiceCircuitBreaker",
-                        URI.create("forward:/fallbackRoute")))
-                .build();
+        return createLoggedRoute("inventory_service", "/api/inventory", inventoryServiceUrl);
     }
 
     @Bean
@@ -101,7 +92,7 @@ public class Route {
                 .build();
     }
 
-    // ===================== FALLBACK =====================
+
     @Bean
     public RouterFunction<ServerResponse> fallbackRoute() {
         return route("fallbackRoute")
@@ -109,5 +100,67 @@ public class Route {
                         ServerResponse.status(HttpStatus.SERVICE_UNAVAILABLE)
                                 .body("Service Unavailable, please try again later"))
                 .build();
+    }
+
+
+    private RouterFunction<ServerResponse> createLoggedRoute(String routeName, String basePath, String targetServiceUrl) {
+        return GatewayRouterFunctions.route(routeName)
+                .route(RequestPredicates.path(basePath)
+                                .or(RequestPredicates.path(basePath + "/**")),
+                        HandlerFunctions.http(targetServiceUrl))
+                .before(request -> {
+                    String username = getCurrentUsername();
+                    log.info("[{}] Request    || Method: {} | Path: {} | Headers: {}",
+                            username, request.method(), request.path(), request.headers().asHttpHeaders());
+                    return request;
+                })
+                .filter((request, next) -> {
+                    long start = System.currentTimeMillis();
+                    String username = getCurrentUsername();
+
+                    ServerResponse response = next.handle(request);
+                    long duration = System.currentTimeMillis() - start;
+
+                    log.info("[{}] Response   || Status: {} | Time: {} ms | Response Body: {}",
+                            username, response.statusCode(), duration, getResponseBodySafe(targetServiceUrl, request));
+
+                    return response;
+                })
+                .filter(CircuitBreakerFilterFunctions.circuitBreaker(
+                        routeName + "_circuitBreaker",
+                        URI.create("forward:/fallbackRoute")))
+                .build();
+    }
+
+
+    private String getResponseBodySafe(String baseUrl, org.springframework.web.servlet.function.ServerRequest request) {
+        try {
+            String targetUrl = baseUrl + request.path();
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseExtractor<String> extractor = (ClientHttpResponse clientResp) -> {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(clientResp.getBody()))) {
+                    return reader.lines().collect(Collectors.joining("\n"));
+                }
+            };
+            String body = restTemplate.execute(targetUrl, request.method(), null, extractor);
+            return body != null && !body.isEmpty() ? body : "[]";
+        } catch (Exception e) {
+            log.warn("Could not read response body: {}", e.getMessage());
+            return "[]";
+        }
+    }
+
+
+    private String getCurrentUsername() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                return authentication.getName();
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return "anonymous";
     }
 }

@@ -1,4 +1,4 @@
-package com.tech.microservice.product.repository.elastic;
+package com.tech.microservice.product.repository;
 
 import com.tech.microservice.product.model.ProductES;
 import org.springframework.data.elasticsearch.annotations.Query;

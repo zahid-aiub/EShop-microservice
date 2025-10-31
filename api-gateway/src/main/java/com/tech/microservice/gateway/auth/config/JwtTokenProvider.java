@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Duration;
 import java.util.Date;
 
 @Component
@@ -31,7 +32,7 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(String username, String role) {
-        long JWT_EXPIRATION = 1000 * 60 * 60;
+        long JWT_EXPIRATION = Duration.ofDays(30).toMillis();
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)

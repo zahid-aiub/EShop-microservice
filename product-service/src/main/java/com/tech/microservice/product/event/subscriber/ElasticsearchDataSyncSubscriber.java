@@ -6,7 +6,7 @@ import com.tech.microservice.product.event.ProductCreatedEvent;
 import com.tech.microservice.product.event.ProductDeletedEvent;
 import com.tech.microservice.product.event.ProductUpdatedEvent;
 import com.tech.microservice.product.model.ProductES;
-import com.tech.microservice.product.repository.elastic.ProductSearchRepository;
+import com.tech.microservice.product.repository.ProductSearchRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
