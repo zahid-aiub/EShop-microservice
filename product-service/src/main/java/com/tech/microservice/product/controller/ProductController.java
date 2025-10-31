@@ -17,31 +17,38 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse createProduct(@RequestBody ProductRequest productRequest) {
-        return productService.createProduct(productRequest);
-    }
-
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponse> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+        List<ProductResponse> products = productService.getAllProducts();
+        return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/test")
-    @ResponseStatus(HttpStatus.OK)
-    public String test() {
-        return "Test";
+    @PostMapping
+    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest productRequest) {
+        ProductResponse response = productService.createProduct(productRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/fulltext/search")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponse> fullTextSearch(@RequestParam("query") String query) {
-        return productService.fullTextSearch(query);
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable String id,
+            @RequestBody ProductRequest productRequest) {
+        ProductResponse response = productService.updateProduct(id, productRequest);
+        return ResponseEntity.ok(response);
     }
 
-    // Sync endpoint for manual trigger
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> fullTextSearch(@RequestParam String q) {
+        List<ProductResponse> products = productService.fullTextSearch(q);
+        return ResponseEntity.ok(products);
+    }
+
     @PostMapping("/sync/elasticsearch")
     public ResponseEntity<String> syncToElasticsearch() {
         productService.syncAllProductsToElasticsearch();

@@ -18,6 +18,15 @@ public class Product {
         return new ProductBuilder();
     }
 
+    public ProductBuilder toBuilder() {
+        return Product.builder()
+                .id(this.id)
+                .name(this.name)
+                .description(this.description)
+                .skuCode(this.skuCode)
+                .price(this.price);
+    }
+
     public String getId() {
         return id;
     }
