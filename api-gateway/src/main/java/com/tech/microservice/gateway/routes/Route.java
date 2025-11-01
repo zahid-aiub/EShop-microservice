@@ -16,6 +16,7 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import java.io.BufferedReader;
@@ -103,17 +104,34 @@ public class Route {
     }
 
 
-    private RouterFunction<ServerResponse> createLoggedRoute(String routeName, String basePath, String targetServiceUrl) {
+    private RouterFunction<ServerResponse> createLoggedRoute(
+            String routeName, String basePath, String targetServiceUrl) {
+
         return GatewayRouterFunctions.route(routeName)
                 .route(RequestPredicates.path(basePath)
                                 .or(RequestPredicates.path(basePath + "/**")),
                         HandlerFunctions.http(targetServiceUrl))
+
+                // Request log (no body)
                 .before(request -> {
                     String username = getCurrentUsername();
-                    log.info("[{}] Request    || Method: {} | Path: {} | Headers: {}",
-                            username, request.method(), request.path(), request.headers().asHttpHeaders());
+
+                    // Safe query params
+                    String queryParams = request.params().isEmpty()
+                            ? "{}"
+                            : request.params().toString();
+
+                    log.info("[{}] Request    || Method: {} | Path: {} | Params: {} | Headers: {}",
+                            username,
+                            request.method(),
+                            request.path(),
+                            queryParams,
+                            request.headers().asHttpHeaders());
+
                     return request;
                 })
+
+                // Response log
                 .filter((request, next) -> {
                     long start = System.currentTimeMillis();
                     String username = getCurrentUsername();
@@ -122,39 +140,19 @@ public class Route {
                     long duration = System.currentTimeMillis() - start;
 
                     log.info("[{}] Response   || Status: {} | Time: {} ms | Response Body: {}",
-                            username, response.statusCode(), duration, getResponseBodySafe(targetServiceUrl, request));
+                            username,
+                            response.statusCode(),
+                            duration,
+                            "[]");
 
                     return response;
                 })
+
                 .filter(CircuitBreakerFilterFunctions.circuitBreaker(
                         routeName + "_circuitBreaker",
                         URI.create("forward:/fallbackRoute")))
                 .build();
     }
-
-
-    private String getResponseBodySafe(String baseUrl, org.springframework.web.servlet.function.ServerRequest request) {
-
-        if (!request.method().name().equalsIgnoreCase("GET")) {
-            return "Body logging skipped for " + request.method();
-        }
-
-        try {
-            String targetUrl = baseUrl + request.path();
-            RestTemplate restTemplate = new RestTemplate();
-            ResponseExtractor<String> extractor = (ClientHttpResponse clientResp) -> {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientResp.getBody()))) {
-                    return reader.lines().collect(Collectors.joining("\n"));
-                }
-            };
-            String body = restTemplate.execute(targetUrl, request.method(), null, extractor);
-            return (body != null && !body.isEmpty()) ? body : "[]";
-        } catch (Exception e) {
-            log.warn("Could not read response body: {}", e.getMessage());
-            return "[]";
-        }
-    }
-
 
 
     private String getCurrentUsername() {
