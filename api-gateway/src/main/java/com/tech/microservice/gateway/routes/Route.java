@@ -134,22 +134,27 @@ public class Route {
 
 
     private String getResponseBodySafe(String baseUrl, org.springframework.web.servlet.function.ServerRequest request) {
+
+        if (!request.method().name().equalsIgnoreCase("GET")) {
+            return "Body logging skipped for " + request.method();
+        }
+
         try {
             String targetUrl = baseUrl + request.path();
             RestTemplate restTemplate = new RestTemplate();
             ResponseExtractor<String> extractor = (ClientHttpResponse clientResp) -> {
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(clientResp.getBody()))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientResp.getBody()))) {
                     return reader.lines().collect(Collectors.joining("\n"));
                 }
             };
             String body = restTemplate.execute(targetUrl, request.method(), null, extractor);
-            return body != null && !body.isEmpty() ? body : "[]";
+            return (body != null && !body.isEmpty()) ? body : "[]";
         } catch (Exception e) {
             log.warn("Could not read response body: {}", e.getMessage());
             return "[]";
         }
     }
+
 
 
     private String getCurrentUsername() {
