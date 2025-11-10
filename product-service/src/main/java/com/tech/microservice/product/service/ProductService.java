@@ -162,9 +162,9 @@ public class ProductService {
                     .toList();
 
             productSearchRepository.saveAll(esProducts);
-            log.info("Upserted {} products to Elasticsearch", esProducts.size());
+            log.info("Upstarted {} products to Elasticsearch", esProducts.size());
 
-            log.info("Complete sync completed successfully. MongoDB ↔ Elasticsearch are now in sync");
+            log.info("Complete sync completed successfully. MongoDB and Elasticsearch are now in sync");
 
         } catch (Exception e) {
             log.error("Error during bulk sync: {}", e.getMessage(), e);
@@ -185,7 +185,7 @@ public class ProductService {
             return productIds;
         } catch (Exception e) {
             log.warn("Error fetching product IDs from Elasticsearch: {}", e.getMessage());
-            return List.of(); // Return empty list if Elasticsearch is not available
+            return List.of();
         }
     }
 
