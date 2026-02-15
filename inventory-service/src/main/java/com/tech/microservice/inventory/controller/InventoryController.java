@@ -12,6 +12,12 @@ public class InventoryController {
     @Autowired
     private InventoryService inventoryService;
 
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    public String getAll() {
+        return "Inventory item []";
+    }
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public boolean isInStock(@RequestParam String skuCode, @RequestParam Integer quantity) {

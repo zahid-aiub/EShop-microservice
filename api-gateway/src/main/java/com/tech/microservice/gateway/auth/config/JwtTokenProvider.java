@@ -75,6 +75,10 @@ public class JwtTokenProvider {
         return getClaimsFromToken(token).get("role", String.class);
     }
 
+    public long getExpiration(String token) {
+        return getClaimsFromToken(token).getExpiration().getTime() - System.currentTimeMillis();
+    }
+
     private Claims getClaimsFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(JWT_SECRET)
