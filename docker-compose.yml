@@ -88,6 +88,8 @@ services:
     command: [ "-config.file=/etc/loki/local-config.yaml" ]
     ports:
       - "3100:3100"
+    volumes:
+      - ./docker/loki/local-config.yaml:/etc/loki/local-config.yaml
 
   prometheus:
     image: prom/prometheus:v2.46.0
